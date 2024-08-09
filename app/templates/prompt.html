@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}burnr - Create Playlist{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="animation">
+        <!-- Placeholder for pending design animation -->
+        <p>Design Animation Here</p>
+    </div>
+    <form action="{{ url_for('main.prompt') }}" method="POST">
+        <label for="prompt">Playlist Description:</label>
+        <input type="text" id="prompt" name="prompt" placeholder="e.g., Hyped up sunny day workout" required>
+
+        <label for="duration">Playlist Duration:</label>
+        <select id="duration" name="duration">
+            <option value="30">30 minutes</option>
+            <option value="60">1 hour</option>
+            <option value="90">1.5 hours</option>
+            <option value="120">2 hours</option>
+        </select>
+
+        <button type="submit" class="btn">Burn</button>
+    </form>
+</div>
+{% endblock %}
