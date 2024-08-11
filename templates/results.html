@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Burnr Playlist</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Your Burnr Playlist</h1>
+        <div class="playlist-embed">
+            <iframe src="https://open.spotify.com/embed/playlist/{{ playlist['id'] }}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+        </div>
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Burn Another</a>
+            <a href="{{ playlist['external_urls']['spotify'] }}" class="btn btn-primary">Open in Spotify</a>
+        </div>
+    </div>
+</body>
+</html>

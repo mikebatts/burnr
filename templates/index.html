@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burnr - Generate Playlist</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>What's Your Mood?</h1>
+        <form action="{{ url_for('generate_playlist') }}" method="POST">
+            <div class="form-group">
+                <label for="mood">Enter a mood or theme for your playlist:</label>
+                <input type="text" id="mood" name="mood" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Burn Mix</button>
+        </form>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
