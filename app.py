@@ -35,6 +35,21 @@ sp_oauth = SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
                         redirect_uri=SPOTIPY_REDIRECT_URI,
                         scope="user-top-read playlist-modify-public playlist-modify-private")
 
+
+def get_spotify_client():
+    token_info = session.get('token_info')
+    if not token_info:
+        return None
+    
+    # Check if token is expired
+    if sp_oauth.is_token_expired(token_info):
+        logger.info("Token expired, refreshing...")
+        token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+        session['token_info'] = token_info
+    
+    return spotipy.Spotify(auth=token_info['access_token'])
+
+
 @app.route('/')
 def login():
     if session.get('token_info') and session.get('is_authenticated'):
@@ -44,6 +59,7 @@ def login():
         logger.info("User not authenticated, rendering login page.")
         authorize_url = sp_oauth.get_authorize_url()
         return render_template('login.html', authorize_url=authorize_url)
+
 
 @app.route('/callback')
 def callback():
@@ -60,16 +76,19 @@ def callback():
         flash("An error occurred during Spotify authentication.")
         return redirect(url_for('login'))
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
 
 @app.route('/index')
 def index():
     if not session.get('is_authenticated'):
         return redirect(url_for('login'))
     return render_template('index.html')
+
 
 @app.route('/generate', methods=['POST'])
 def generate_playlist():
@@ -83,7 +102,6 @@ def generate_playlist():
         return redirect(url_for('index'))
 
     try:
-        # Enhanced OpenAI request with structured output
         completion = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -97,17 +115,12 @@ def generate_playlist():
         response_text = completion['choices'][0]['message']['content'].strip()
         search_terms = extract_search_terms(response_text)
 
-        token_info = session.get('token_info')
-        if not token_info:
-            flash('Token information is missing. Please log in again.')
+        sp = get_spotify_client()
+        if not sp:
+            flash('Failed to get Spotify client. Please log in again.')
             return redirect(url_for('login'))
 
-        sp = create_spotify_client(token_info['access_token'])
-
-        # Fetch user's top tracks and artists
         user_top_tracks, user_top_artists = get_user_top_tracks_and_artists(sp)
-
-        # Generate recommendations based on user's taste and mood prompt
         track_uris = generate_recommendations(sp, search_terms, user_top_tracks, user_top_artists)
 
         if not track_uris:
@@ -116,7 +129,6 @@ def generate_playlist():
 
         playlist_name = mood_prompt.lower()
         playlist_id = create_spotify_playlist(sp, playlist_name)
-
         add_tracks_to_playlist(sp, playlist_id, track_uris)
 
         return redirect(url_for('show_playlist', playlist_id=playlist_id))
@@ -126,19 +138,22 @@ def generate_playlist():
         flash(f"An error occurred: {str(e)}")
         return redirect(url_for('index'))
 
+
 @app.route('/playlist/<playlist_id>')
 def show_playlist(playlist_id):
-    if not session.get('is_authenticated'):
+    sp = get_spotify_client()
+    if not sp:
+        flash('Failed to get Spotify client. Please log in again.')
         return redirect(url_for('login'))
 
-    token_info = session.get('token_info')
-    if not token_info:
-        flash('Token information is missing. Please log in again.')
-        return redirect(url_for('login'))
+    try:
+        playlist = sp.playlist(playlist_id)
+        return render_template('results.html', playlist=playlist)
+    except spotipy.exceptions.SpotifyException as e:
+        logger.error(f"Spotify API error: {e}")
+        flash("Failed to load playlist. Please try again.")
+        return redirect(url_for('index'))
 
-    sp = create_spotify_client(token_info['access_token'])
-    playlist = sp.playlist(playlist_id)
-    return render_template('results.html', playlist=playlist)
 
 # Helper Functions
 
@@ -154,6 +169,7 @@ def extract_search_terms(openai_response):
             terms["artists"] = [artist.strip() for artist in artists.split(",") if artist]
     return terms
 
+
 def get_user_top_tracks_and_artists(sp):
     top_tracks = sp.current_user_top_tracks(limit=20, time_range='medium_term')
     top_artists = sp.current_user_top_artists(limit=20, time_range='medium_term')
@@ -163,9 +179,10 @@ def get_user_top_tracks_and_artists(sp):
 
     return top_track_ids, top_artist_ids
 
+
 def generate_recommendations(sp, search_terms, user_top_tracks, user_top_artists, min_songs=100):
-    track_uris = set()  # Use a set to avoid duplicates
-    query_limit = 50  # Limit per query
+    track_uris = set()
+    query_limit = 50
 
     genres = search_terms.get('genres', [])
     artists = search_terms.get('artists', [])
@@ -173,7 +190,6 @@ def generate_recommendations(sp, search_terms, user_top_tracks, user_top_artists
     print(f"Extracted genres from prompt: {genres}")
     print(f"Extracted artists from prompt: {artists}")
 
-    # Fetch tracks based on genres and artists
     for genre in genres:
         print(f"Searching for tracks in genre: {genre}")
         if len(track_uris) >= min_songs:
@@ -194,16 +210,13 @@ def generate_recommendations(sp, search_terms, user_top_tracks, user_top_artists
                 break
             track_uris.add(track['uri'])
 
-    # If still not enough tracks, augment with recommendations based on user taste
     if len(track_uris) < min_songs:
         seed_artists = user_top_artists[:5]
         seed_tracks = user_top_tracks[:5]
 
-        # Ensure total seed count does not exceed 5
         total_seeds = len(seed_artists) + len(seed_tracks) + len(genres)
         if total_seeds > 5:
             print(f"Total seeds ({total_seeds}) exceed 5. Adjusting...")
-            # Prioritize user_top_artists, then user_top_tracks, then genres
             if len(seed_artists) > 0:
                 seed_tracks = seed_tracks[:5 - len(seed_artists)]
                 genres = genres[:5 - len(seed_artists) - len(seed_tracks)]
@@ -229,29 +242,31 @@ def generate_recommendations(sp, search_terms, user_top_tracks, user_top_artists
             logger.error(f"Spotify API error: {e}")
         except Exception as e:
             logger.error(f"Unexpected error occurred: {e}")
-    
-    # Ensure exactly min_songs are returned
+
     return list(track_uris)[:min_songs]
 
 
 def create_spotify_client(token):
     return spotipy.Spotify(auth=token, requests_timeout=10)
 
+
 def create_spotify_playlist(sp, name, public=True, collaborative=False):
     user_id = sp.current_user()['id']
     playlist = sp.user_playlist_create(
         user=user_id,
-        name=name,
+        name=name.lower(),
         public=public,
-        description=f"mixed by burnr",
+        description=f"Generated playlist for: {name.lower()} - mixed by burnr",
         collaborative=collaborative
     )
     return playlist['id']
 
+
 def add_tracks_to_playlist(sp, playlist_id, track_uris):
     sp.playlist_add_items(playlist_id, track_uris)
+
 
 if __name__ == '__main__':
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
-    app.run(debug=False, host='0.0.0.0', port=5001)  # Set for production-ready deployment
+    app.run(debug=False, host='0.0.0.0', port=5001)

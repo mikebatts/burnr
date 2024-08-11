@@ -8,9 +8,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Your Burnr Playlist</h1>
         <div class="playlist-embed">
-            <iframe src="https://open.spotify.com/embed/playlist/{{ playlist['id'] }}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+            <iframe src="https://open.spotify.com/embed/playlist/{{ playlist['id'] }}" width="100%" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
         </div>
         <div class="actions">
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Burn Another</a>

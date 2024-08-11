@@ -8,14 +8,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>What's Your Mood?</h1>
-        <form action="{{ url_for('generate_playlist') }}" method="POST">
-            <div class="form-group">
-                <label for="mood">Enter a mood or theme for your playlist:</label>
-                <input type="text" id="mood" name="mood" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Burn Mix</button>
-        </form>
+        <div class="input-group">
+            <h2>What's Your Mood?</h2>
+            <form action="{{ url_for('generate_playlist') }}" method="POST" id="mood-form">
+                <div class="form-group">
+                    <input type="text" id="mood" name="mood" class="form-control" required>
+                </div>
+            </form>
+        </div>
+        <button type="submit" class="btn btn-primary" form="mood-form">Burn Mix</button>
+        
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <ul class="flashes">
@@ -26,5 +28,42 @@
             {% endif %}
         {% endwith %}
     </div>
+
+    <script>
+        const prompts = ["chill rainy day", "upbeat workout", "relaxing evening", "hype weekend party"];
+        let promptIndex = 0;
+        let charIndex = 0;
+        let typingSpeed = 100; // typing speed in milliseconds
+        let deletingSpeed = 50; // deleting speed in milliseconds
+        let delayBetweenPrompts = 1000; // delay between prompts
+
+        function typePlaceholder() {
+            const input = document.getElementById('mood');
+            const currentPrompt = prompts[promptIndex];
+
+            if (charIndex < currentPrompt.length) {
+                input.placeholder += currentPrompt.charAt(charIndex);
+                charIndex++;
+                setTimeout(typePlaceholder, typingSpeed);
+            } else {
+                setTimeout(deletePlaceholder, delayBetweenPrompts);
+            }
+        }
+
+        function deletePlaceholder() {
+            const input = document.getElementById('mood');
+            if (charIndex > 0) {
+                input.placeholder = input.placeholder.slice(0, -1);
+                charIndex--;
+                setTimeout(deletePlaceholder, deletingSpeed);
+            } else {
+                promptIndex = (promptIndex + 1) % prompts.length;
+                setTimeout(typePlaceholder, typingSpeed);
+            }
+        }
+
+        // Start the animation
+        typePlaceholder();
+    </script>
 </body>
 </html>

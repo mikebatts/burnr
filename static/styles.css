@@ -1,52 +1,90 @@
+/* Base Styles */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
+    font-family: "SF UI Text", sans-serif;
+    background-color: #fff;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    text-align: center;
 }
 
 .container {
-    text-align: center;
+    width: 100%;
+    height: 100vh;
+    max-width: 400px;
     background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    margin: auto;
+    box-sizing: border-box;
 }
 
 h1 {
-    margin-bottom: 20px;
+    color: #000;
+    font-family: "New York Extra Large";
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+h2 {
+    color: #000;
+    font-family: "New York Extra Large";
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+p {
+    color: rgba(0, 0, 0, 0.64);
+    font-family: "SF UI Text";
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    width: 100%;
 }
 
 input[type="text"] {
     width: 100%;
-    padding: 10px;
-    font-size: 16px;
+    padding: 24px;
+    font-family: "SF UI Text", sans-serif;
+    font-weight: 500;
+    text-align: center;
+    font-size: 18px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.actions {
+    flex-direction: column;
+    display: flex;
+    gap: 8px;
 }
 
 .btn {
-    padding: 10px 20px;
+    padding: 16px;
+    font-family: "SF UI Text";
     font-size: 16px;
+    font-weight: 600;
     color: #fff;
-    background-color: #1DB954;
+    background-color: #000;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     text-decoration: none;
-}
-
-.btn-primary {
-    background-color: #1DB954;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .btn-secondary {
@@ -58,4 +96,44 @@ input[type="text"] {
     list-style-type: none;
     padding: 0;
     color: red;
+}
+
+/* Playlist Embed Styles */
+.playlist-embed {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.playlist-embed iframe {
+    width: 100%;
+    height: 100%; /* Full height for mobile */
+}
+
+/* Media Queries for Larger Screens */
+@media (min-width: 768px) {
+    .container {
+        max-width: 600px;
+        padding: 32px;
+        height: auto;
+        gap: 16px;
+    }
+
+    h1 {
+        font-size: 64px;
+    }
+
+    h2 {
+        font-size: 32px;
+    }
+
+    .btn {
+        padding: 24px;
+        font-size: 18px;
+    }
+
+    .playlist-embed iframe {
+        height: 500px; /* Fixed height for desktop */
+    }
 }
