@@ -114,7 +114,7 @@ def generate_playlist():
             flash('No tracks found. Try a different mood or theme.')
             return redirect(url_for('index'))
 
-        playlist_name = mood_prompt.title()
+        playlist_name = mood_prompt.lower()
         playlist_id = create_spotify_playlist(sp, playlist_name)
 
         add_tracks_to_playlist(sp, playlist_id, track_uris)
@@ -243,7 +243,7 @@ def create_spotify_playlist(sp, name, public=True, collaborative=False):
         user=user_id,
         name=name,
         public=public,
-        description=f"Generated playlist for: {name}",
+        description=f"mixed by burnr",
         collaborative=collaborative
     )
     return playlist['id']
